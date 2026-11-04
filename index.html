@@ -7,211 +7,40 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   * { user-select: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-  body { 
-    margin:0; 
-    background:#5c94fc; 
-    display:flex; 
-    justify-content:center; 
-    align-items:center; 
-    height:100vh; 
-    font-family:sans-serif; 
-    overflow:hidden;
-    touch-action:none;
-  }
-  canvas { 
-    background:#5c94fc; 
-    border:4px solid #000; 
-    max-width:100%; 
-    touch-action:none;
-  }
-  
-  #controls { 
-    position:fixed; 
-    bottom:20px; 
-    left:0;
-    right:0;
-    display:flex; 
-    justify-content:space-between; 
-    align-items:flex-end;
-    padding:0 15px; 
-    pointer-events:none;
-    z-index:50;
-  }
-  
-  .btn { 
-    width:80px; 
-    height:80px; 
-    background:rgba(255,255,255,0.3); 
-    color:#fff; 
-    border:3px solid rgba(255,255,255,0.7);
-    border-radius:50%; 
-    font-size:36px; 
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    pointer-events:auto;
-    transition: background 0.05s, transform 0.05s;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  }
-  
-  .btn.active {
-    background:rgba(229, 37, 33, 0.9);
-    transform: scale(0.92);
-  }
-  
-  .btn-jump {
-    width:90px;
-    height:90px;
-    background:rgba(229, 37, 33, 0.6);
-    font-size:40px;
-  }
-  
-  .btn-jump.active {
-    background:rgba(229, 37, 33, 1);
-  }
-  
-  .btn-fire {
-    width:75px;
-    height:75px;
-    background:rgba(255, 100, 0, 0.6);
-    font-size:36px;
-    margin-left:10px;
-  }
-  
-  .btn-fire.active {
-    background:rgba(255, 100, 0, 1);
-  }
-  
-  #pauseBtn {
-    position:fixed;
-    top:80px;
-    right:15px;
-    width:50px;
-    height:50px;
-    background:rgba(0,0,0,0.5);
-    color:#fff;
-    border:2px solid rgba(255,255,255,0.7);
-    border-radius:50%;
-    font-size:20px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:200;
-  }
-  
-  #pauseBtn.active {
-    background:rgba(229, 37, 33, 0.9);
-  }
-  
-  #soundToggle {
-    position:fixed;
-    top:140px;
-    right:15px;
-    width:50px;
-    height:50px;
-    background:rgba(0,0,0,0.5);
-    color:#fff;
-    border:2px solid rgba(255,255,255,0.7);
-    border-radius:50%;
-    font-size:20px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:200;
-  }
-  
-  #activePowerUps {
-    position:fixed;
-    top:80px;
-    left:15px;
-    display:flex;
-    flex-direction:column;
-    gap:5px;
-    z-index:50;
-    pointer-events:none;
-  }
-  
-  .ap-item {
-    background:rgba(0,0,0,0.6);
-    color:#fff;
-    padding:5px 12px;
-    border-radius:15px;
-    font-size:16px;
-    font-weight:bold;
-    display:none;
-    border:2px solid rgba(255,255,255,0.5);
-    min-width:60px;
-    text-align:center;
-  }
-  
-  .ap-item.active {
-    display:flex;
-    align-items:center;
-    gap:5px;
-  }
-  
-  #apStar {
-    background:rgba(255, 215, 0, 0.7);
-    color:#000;
-  }
-  
-  #apFire {
-    background:rgba(255, 100, 0, 0.7);
-  }
-  
-  #apMushroom {
-    background:rgba(229, 37, 33, 0.7);
-  }
-  
-  #overlay { 
-    position:fixed; 
-    top:0; left:0; 
-    width:100%; height:100%; 
-    background:rgba(0,0,0,0.8); 
-    display:none; 
-    justify-content:center; 
-    align-items:center; 
-    flex-direction:column; 
-    color:#fff; 
-    text-align:center;
-    z-index:100;
-  }
-  #overlay h1 { 
-    font-size:48px; 
-    margin:10px; 
-    text-shadow:3px 3px 0 #000; 
-  }
-  #overlay p { 
-    font-size:24px; 
-    margin:10px; 
-  }
-  #restartBtn { 
-    padding:15px 40px; 
-    font-size:24px; 
-    background:#e52521; 
-    color:#fff; 
-    border:none; 
-    border-radius:10px; 
-    margin-top:20px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  }
-  #restartBtn:active {
-    transform: scale(0.95);
-  }
+  body { margin:0; background:#5c94fc; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; overflow:hidden; touch-action:none; }
+  canvas { background:#5c94fc; border:4px solid #000; max-width:100%; touch-action:none; }
+  #controls { position:fixed; bottom:20px; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-end; padding:0 15px; pointer-events:none; z-index:50; }
+  .btn { width:80px; height:80px; background:rgba(255,255,255,0.3); color:#fff; border:3px solid rgba(255,255,255,0.7); border-radius:50%; font-size:36px; display:flex; justify-content:center; align-items:center; pointer-events:auto; transition: background 0.05s, transform 0.05s; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+  .btn.active { background:rgba(229, 37, 33, 0.9); transform: scale(0.92); }
+  .btn-jump { width:90px; height:90px; background:rgba(229, 37, 33, 0.6); font-size:40px; }
+  .btn-jump.active { background:rgba(229, 37, 33, 1); }
+  .btn-fire { width:75px; height:75px; background:rgba(255, 100, 0, 0.6); font-size:36px; margin-left:10px; }
+  .btn-fire.active { background:rgba(255, 100, 0, 1); }
+  #pauseBtn { position:fixed; top:80px; right:15px; width:50px; height:50px; background:rgba(0,0,0,0.5); color:#fff; border:2px solid rgba(255,255,255,0.7); border-radius:50%; font-size:20px; display:flex; justify-content:center; align-items:center; z-index:200; }
+  #pauseBtn.active { background:rgba(229, 37, 33, 0.9); }
+  #soundToggle { position:fixed; top:140px; right:15px; width:50px; height:50px; background:rgba(0,0,0,0.5); color:#fff; border:2px solid rgba(255,255,255,0.7); border-radius:50%; font-size:20px; display:flex; justify-content:center; align-items:center; z-index:200; }
+  #activePowerUps { position:fixed; top:80px; left:15px; display:flex; flex-direction:column; gap:5px; z-index:50; pointer-events:none; }
+  .ap-item { background:rgba(0,0,0,0.6); color:#fff; padding:5px 12px; border-radius:15px; font-size:16px; font-weight:bold; display:none; border:2px solid rgba(255,255,255,0.5); min-width:60px; text-align:center; }
+  .ap-item.active { display:flex; align-items:center; gap:5px; }
+  #apStar { background:rgba(255, 215, 0, 0.7); color:#000; }
+  #apFire { background:rgba(255, 100, 0, 0.7); }
+  #apMushroom { background:rgba(229, 37, 33, 0.7); }
+  #overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; flex-direction:column; color:#fff; text-align:center; z-index:100; }
+  #overlay h1 { font-size:48px; margin:10px; text-shadow:3px 3px 0 #000; }
+  #overlay p { font-size:24px; margin:10px; }
+  #restartBtn { padding:15px 40px; font-size:24px; background:#e52521; color:#fff; border:none; border-radius:10px; margin-top:20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+  #restartBtn:active { transform: scale(0.95); }
 </style>
 </head>
 <body>
 <canvas id="game" width="400" height="500"></canvas>
-
 <div id="pauseBtn">⏸</div>
 <div id="soundToggle">🔊</div>
-
 <div id="activePowerUps">
   <div id="apMushroom" class="ap-item">🍄 BIG</div>
   <div id="apStar" class="ap-item">⭐ <span id="starTimerText">8.0</span></div>
   <div id="apFire" class="ap-item">🔥 FIRE</div>
 </div>
-
 <div id="controls">
   <button class="btn" id="left">◀</button>
   <div style="display:flex; gap:10px; align-items:flex-end;">
@@ -220,7 +49,6 @@
   </div>
   <button class="btn" id="right">▶</button>
 </div>
-
 <div id="overlay">
   <h1 id="overlayTitle">Game Over</h1>
   <p id="overlayText">Очки: 0</p>
@@ -253,17 +81,13 @@ let starMusicInterval = null;
 
 function initAudio() {
   if (!audioCtx) {
-    try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    } catch(e) {}
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
   }
 }
 
 function activateAudioOnInteraction() {
   initAudio();
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }
 
 function playTone(freq, duration, type = 'square', volume = 0.1) {
@@ -320,33 +144,25 @@ function playHurtSound() {
 function playGameOverSound() {
   if (!soundEnabled || !audioCtx) return;
   const notes = [523, 494, 440, 392, 349, 330, 294, 262];
-  notes.forEach((freq, i) => {
-    setTimeout(() => playTone(freq, 0.2, 'square', 0.12), i * 150);
-  });
+  notes.forEach((freq, i) => setTimeout(() => playTone(freq, 0.2, 'square', 0.12), i * 150));
 }
 
 function playWinSound() {
   if (!soundEnabled || !audioCtx) return;
   const notes = [523, 659, 784, 1047, 784, 1047];
-  notes.forEach((freq, i) => {
-    setTimeout(() => playTone(freq, 0.15, 'square', 0.12), i * 120);
-  });
+  notes.forEach((freq, i) => setTimeout(() => playTone(freq, 0.15, 'square', 0.12), i * 120));
 }
 
 function playPowerUpSound() {
   if (!soundEnabled || !audioCtx) return;
   const notes = [523, 659, 784, 1047];
-  notes.forEach((freq, i) => {
-    setTimeout(() => playTone(freq, 0.1, 'square', 0.12), i * 60);
-  });
+  notes.forEach((freq, i) => setTimeout(() => playTone(freq, 0.1, 'square', 0.12), i * 60));
 }
 
 function playShrinkSound() {
   if (!soundEnabled || !audioCtx) return;
   const notes = [784, 523, 392];
-  notes.forEach((freq, i) => {
-    setTimeout(() => playTone(freq, 0.1, 'square', 0.12), i * 80);
-  });
+  notes.forEach((freq, i) => setTimeout(() => playTone(freq, 0.1, 'square', 0.12), i * 80));
 }
 
 function playBlockHitSound() {
@@ -380,57 +196,50 @@ function startStarMusic() {
   if (!soundEnabled || !audioCtx) return;
   starMusicIndex = 0;
   starMusicInterval = setInterval(() => {
-    if (!soundEnabled || !audioCtx || player.starTimer <= 0) {
-      stopStarMusic();
-      return;
-    }
-    const freq = starMusicNotes[starMusicIndex % starMusicNotes.length];
-    playTone(freq, 0.08, 'square', 0.05);
+    if (!soundEnabled || !audioCtx || player.starTimer <= 0) { stopStarMusic(); return; }
+    playTone(starMusicNotes[starMusicIndex % starMusicNotes.length], 0.08, 'square', 0.05);
     starMusicIndex++;
   }, 100);
 }
 
 function stopStarMusic() {
-  if (starMusicInterval) {
-    clearInterval(starMusicInterval);
-    starMusicInterval = null;
-  }
+  if (starMusicInterval) { clearInterval(starMusicInterval); starMusicInterval = null; }
 }
 
-// СПОКОЙНАЯ ФОНОВАЯ МУЗЫКА — длинная, медленная, не зацикленная
+// СПОКОЙНАЯ ФОНОВАЯ МУЗЫКА
 const musicNotes = [
-  // Первая часть (мягкое вступление)
   392, 0, 440, 0, 494, 0, 523, 0, 494, 0, 440, 0, 392, 0, 0, 0,
   349, 0, 392, 0, 440, 0, 494, 0, 440, 0, 392, 0, 349, 0, 0, 0,
-  // Вторая часть (развитие)
   523, 0, 587, 0, 659, 0, 587, 0, 523, 0, 494, 0, 440, 0, 0, 0,
   392, 0, 440, 0, 494, 0, 523, 0, 587, 0, 523, 0, 494, 0, 0, 0,
-  // Третья часть (кульминация и затухание)
   659, 0, 587, 0, 523, 0, 494, 0, 440, 0, 392, 0, 349, 0, 0, 0,
   330, 0, 349, 0, 392, 0, 440, 0, 392, 0, 349, 0, 330, 0, 0, 0,
 ];
 let musicIndex = 0;
+let musicLooping = false;
 
 function startMusic() {
   if (!musicEnabled || !audioCtx || player.starTimer > 0) return;
   stopMusic();
   musicIndex = 0;
+  musicLooping = false;
   musicInterval = setInterval(() => {
-    if (!musicEnabled || !audioCtx || player.starTimer > 0) {
-      stopMusic();
-      return;
+    if (!musicEnabled || !audioCtx || player.starTimer > 0) { stopMusic(); return; }
+    if (musicIndex >= musicNotes.length) {
+      if (musicLooping) {
+        stopMusic();
+        return;
+      }
+      musicLooping = true;
     }
-    const freq = musicNotes[musicIndex % musicNotes.length];
-    if (freq > 0) playTone(freq, 0.2, 'sine', 0.03);
+    const freq = musicNotes[Math.min(musicIndex, musicNotes.length - 1)];
+    if (freq > 0) playTone(freq, 0.25, 'sine', 0.03);
     musicIndex++;
-  }, 250);
+  }, 280);
 }
 
 function stopMusic() {
-  if (musicInterval) {
-    clearInterval(musicInterval);
-    musicInterval = null;
-  }
+  if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
 }
 
 soundToggle.addEventListener('click', () => {
@@ -457,11 +266,8 @@ let cameraX = 0;
 let player = { 
   x:50, y:300, w:MARIO_SMALL.w, h:MARIO_SMALL.h, 
   vx:0, vy:0, onGround:false,
-  isBig: false,
-  hasFire: false,
-  starTimer: 0,
-  lastFireTime: 0,
-  direction: 1
+  isBig: false, hasFire: false, starTimer: 0,
+  lastFireTime: 0, direction: 1
 };
 
 let score = 0;
@@ -498,14 +304,14 @@ const platforms = [
   {x:2320, y:320, w:80, h:15},
 ];
 
-// Блоки с бонусами — ПОДНЯТЫ ВЫШЕ И РАСПОЛОЖЕНЫ НАД ПЛАТФОРМАМИ
+// Блоки "?" — ПОДНЯТЫ ВЫШЕ, чтобы можно было ударить головой
 const questionBlocks = [
-  {x:180, y:330, w:30, h:30, activated:false, bounceTime:0},
-  {x:730, y:250, w:30, h:30, activated:false, bounceTime:0},
-  {x:1170, y:290, w:30, h:30, activated:false, bounceTime:0},
-  {x:1570, y:290, w:30, h:30, activated:false, bounceTime:0},
-  {x:1920, y:330, w:30, h:30, activated:false, bounceTime:0},
-  {x:2230, y:330, w:30, h:30, activated:false, bounceTime:0},
+  {x:180, y:320, w:30, h:30, activated:false, bounceTime:0, content:''},
+  {x:730, y:240, w:30, h:30, activated:false, bounceTime:0, content:''},
+  {x:1170, y:280, w:30, h:30, activated:false, bounceTime:0, content:''},
+  {x:1570, y:280, w:30, h:30, activated:false, bounceTime:0, content:''},
+  {x:1920, y:320, w:30, h:30, activated:false, bounceTime:0, content:''},
+  {x:2230, y:320, w:30, h:30, activated:false, bounceTime:0, content:''},
 ];
 
 let coins = [];
@@ -515,7 +321,6 @@ let fireballs = [];
 
 const flag = { x: 2350, y: 380, w: 10, h: 80 };
 
-// Случайный выбор бонуса
 function getRandomPowerUp() {
   const rand = Math.random();
   if (rand < 0.4) return 'mushroom';
@@ -532,7 +337,6 @@ function initLevel() {
     {x:1940, y:350, taken:false}, {x:2050, y:290, taken:false}, {x:1940, y:210, taken:false}, {x:1800, y:430, taken:false},
     {x:2230, y:350, taken:false}, {x:2350, y:290, taken:false}, {x:2200, y:430, taken:false}, {x:2280, y:430, taken:false}, {x:2320, y:430, taken:false},
   ];
-  
   enemies = [
     {x:200, y:440, w:25, h:20, vx:1, minX:50, maxX:400, alive:true, type:'goomba'},
     {x:550, y:440, w:25, h:20, vx:-1, minX:500, maxX:625, alive:true, type:'goomba'},
@@ -543,10 +347,8 @@ function initLevel() {
     {x:750, y:200, w:25, h:20, vy:1, minY:150, maxY:280, alive:true, type:'flying'},
     {x:1500, y:150, w:25, h:20, vy:-1, minY:100, maxY:230, alive:true, type:'flying'},
   ];
-  
   powerUps = [];
   fireballs = [];
-  
   for (const block of questionBlocks) {
     block.activated = false;
     block.bounceTime = 0;
@@ -569,15 +371,9 @@ function vibrate(style) {
 function spawnPowerUp(block) {
   powerUps.push({
     type: block.content,
-    x: block.x,
-    y: block.y,
-    w: 25,
-    h: 25,
-    vx: 1.5,
-    vy: 0,
-    state: 'emerging',
-    emergeProgress: 0,
-    sourceY: block.y
+    x: block.x, y: block.y, w: 25, h: 25,
+    vx: 1.5, vy: 0,
+    state: 'emerging', emergeProgress: 0, sourceY: block.y
   });
 }
 
@@ -586,13 +382,9 @@ function collectPowerUp(pu) {
   playPowerUpSound();
   vibrate('success');
   score += 100;
-  
   if (pu.type === 'mushroom') {
-    if (player.isBig) {
-      lives++;
-    } else {
-      growMario();
-    }
+    if (player.isBig) lives++;
+    else growMario();
   } else if (pu.type === 'star') {
     player.starTimer = 8 * 60;
     stopMusic();
@@ -633,15 +425,11 @@ function fireFireball() {
   if (!player.hasFire) return;
   const now = Date.now();
   if (now - player.lastFireTime < 450) return;
-  
   player.lastFireTime = now;
   fireballs.push({
     x: player.x + (player.direction > 0 ? player.w : -12),
     y: player.y + player.h / 2 - 6,
-    vx: player.direction * 6,
-    vy: 0,
-    w: 12,
-    h: 12
+    vx: player.direction * 6, vy: 0, w: 12, h: 12
   });
   playFireSound();
   vibrate('light');
@@ -653,25 +441,20 @@ function updateFireballs() {
     fb.x += fb.vx;
     fb.vy += 0.4;
     fb.y += fb.vy;
-    
     for (const p of platforms) {
       if (fb.x < p.x + p.w && fb.x + fb.w > p.x &&
-          fb.y + fb.h > p.y && fb.y + fb.h < p.y + p.h + 10 &&
-          fb.vy >= 0) {
+          fb.y + fb.h > p.y && fb.y + fb.h < p.y + p.h + 10 && fb.vy >= 0) {
         fb.y = p.y - fb.h;
         fb.vy = -6;
       }
     }
-    
     if (fb.x < cameraX - 50 || fb.x > cameraX + canvas.width + 50 || fb.y > WORLD_HEIGHT) {
       fireballs.splice(i, 1);
       continue;
     }
-    
     for (const e of enemies) {
       if (!e.alive) continue;
-      if (fb.x < e.x + e.w && fb.x + fb.w > e.x &&
-          fb.y < e.y + e.h && fb.y + fb.h > e.y) {
+      if (fb.x < e.x + e.w && fb.x + fb.w > e.x && fb.y < e.y + e.h && fb.y + fb.h > e.y) {
         e.alive = false;
         score += 50;
         vibrate('success');
@@ -685,14 +468,11 @@ function updateFireballs() {
 
 function drawMario() {
   if (invincible > 0 && Math.floor(invincible / 5) % 2 === 0 && player.starTimer === 0) return;
-  
   const x = player.x - cameraX;
   const y = player.y;
   const w = player.w;
   const h = player.h;
-  
   let hatColor, shirtColor, pantsColor;
-  
   if (player.starTimer > 0) {
     const colors = ['#e52521', '#ff8c00', '#ffd700', '#32cd32', '#1e90ff', '#8a2be2'];
     const ci = Math.floor(Date.now() / 80) % colors.length;
@@ -708,7 +488,6 @@ function drawMario() {
     shirtColor = '#fcb89c';
     pantsColor = '#1f5fd6';
   }
-  
   ctx.fillStyle = hatColor;
   ctx.fillRect(x, y, w, h * 0.3);
   ctx.fillStyle = shirtColor;
@@ -763,7 +542,6 @@ function drawQuestionBlock(block) {
   const x = block.x - cameraX;
   const y = block.y + bounceOffset;
   if (x + block.w < 0 || x > canvas.width) return;
-  
   if (block.activated) {
     ctx.fillStyle = '#8b4513';
     ctx.fillRect(x, y, block.w, block.h);
@@ -800,7 +578,6 @@ function drawEnemy(e) {
   if (!e.alive) return;
   const x = e.x - cameraX;
   if (x + e.w < 0 || x > canvas.width) return;
-  
   if (e.type === 'goomba') {
     ctx.fillStyle = '#6b3410';
     ctx.fillRect(x, e.y, e.w, e.h);
@@ -850,7 +627,6 @@ function drawPowerUp(pu) {
   if (pu.collected) return;
   const x = pu.x - cameraX;
   if (x + pu.w < 0 || x > canvas.width) return;
-  
   if (pu.type === 'mushroom') {
     ctx.fillStyle = '#fff';
     ctx.fillRect(x + pu.w*0.3, pu.y + pu.h*0.5, pu.w*0.4, pu.h*0.5);
@@ -958,15 +734,9 @@ function drawDecoration(d) {
 function update() {
   if (gameOver || won || paused) return;
 
-  if (keys.left) {
-    player.vx = -3;
-    player.direction = -1;
-  } else if (keys.right) {
-    player.vx = 3;
-    player.direction = 1;
-  } else {
-    player.vx = 0;
-  }
+  if (keys.left) { player.vx = -3; player.direction = -1; }
+  else if (keys.right) { player.vx = 3; player.direction = 1; }
+  else player.vx = 0;
 
   if (keys.jump && player.onGround) {
     player.vy = -10;
@@ -975,9 +745,7 @@ function update() {
     playJumpSound();
   }
 
-  if (keys.fire && player.hasFire) {
-    fireFireball();
-  }
+  if (keys.fire && player.hasFire) fireFireball();
 
   player.vy += 0.5;
   player.x += player.vx;
@@ -1015,14 +783,12 @@ function update() {
   for (const block of questionBlocks) {
     const bounceOffset = block.bounceTime > 0 ? -Math.sin(block.bounceTime / 10 * Math.PI) * 5 : 0;
     const by = block.y + bounceOffset;
-    
     if (player.x < block.x + block.w && player.x + player.w > block.x) {
       if (player.y + player.h > by && player.y + player.h < by + block.h + 10 && player.vy >= 0) {
         player.y = by - player.h;
         player.vy = 0;
         player.onGround = true;
       }
-      
       if (!block.activated && player.y < by + block.h && player.y > by && player.vy < 0) {
         block.activated = true;
         block.bounceTime = 10;
@@ -1032,14 +798,10 @@ function update() {
         vibrate('light');
       }
     }
-    
     if (block.bounceTime > 0) block.bounceTime--;
   }
 
-  if (player.y > WORLD_HEIGHT) {
-    hurtPlayer();
-    return;
-  }
+  if (player.y > WORLD_HEIGHT) { hurtPlayer(); return; }
 
   for (const c of coins) {
     if (!c.taken && Math.abs(player.x+15-c.x) < 20 && Math.abs(player.y+20-c.y) < 20) {
@@ -1052,39 +814,24 @@ function update() {
 
   for (let i = powerUps.length - 1; i >= 0; i--) {
     const pu = powerUps[i];
-    
-    if (pu.collected) {
-      powerUps.splice(i, 1);
-      continue;
-    }
-    
+    if (pu.collected) { powerUps.splice(i, 1); continue; }
     if (pu.state === 'emerging') {
       pu.emergeProgress += 1;
       pu.y = pu.sourceY - pu.emergeProgress;
-      if (pu.emergeProgress >= 30) {
-        pu.state = 'moving';
-        pu.y = pu.sourceY - 30;
-      }
+      if (pu.emergeProgress >= 30) { pu.state = 'moving'; pu.y = pu.sourceY - 30; }
     } else if (pu.state === 'moving') {
       pu.x += pu.vx;
       pu.vy += 0.5;
       pu.y += pu.vy;
-      
       for (const p of platforms) {
         if (pu.x < p.x + p.w && pu.x + pu.w > p.x &&
-            pu.y + pu.h > p.y && pu.y + pu.h < p.y + p.h + 10 &&
-            pu.vy >= 0) {
+            pu.y + pu.h > p.y && pu.y + pu.h < p.y + p.h + 10 && pu.vy >= 0) {
           pu.y = p.y - pu.h;
           pu.vy = 0;
         }
       }
-      
-      if (pu.y > WORLD_HEIGHT) {
-        powerUps.splice(i, 1);
-        continue;
-      }
+      if (pu.y > WORLD_HEIGHT) { powerUps.splice(i, 1); continue; }
     }
-    
     if (player.x < pu.x + pu.w && player.x + player.w > pu.x &&
         player.y < pu.y + pu.h && player.y + player.h > pu.y) {
       collectPowerUp(pu);
@@ -1095,7 +842,6 @@ function update() {
 
   for (const e of enemies) {
     if (!e.alive) continue;
-    
     if (e.type === 'goomba') {
       e.x += e.vx;
       if (e.x < e.minX || e.x + e.w > e.maxX) e.vx *= -1;
@@ -1106,7 +852,6 @@ function update() {
 
     if (player.x < e.x + e.w && player.x + player.w > e.x &&
         player.y < e.y + e.h && player.y + player.h > e.y) {
-      
       if (player.starTimer > 0) {
         e.alive = false;
         player.vy = -5;
@@ -1117,7 +862,6 @@ function update() {
         const playerBottom = player.y + player.h;
         const enemyTop = e.y;
         const enemyMiddle = e.y + e.h * 0.6;
-        
         if (player.vy > 0 && playerBottom < enemyMiddle && playerBottom > enemyTop - 10) {
           e.alive = false;
           player.vy = -7;
@@ -1149,17 +893,14 @@ function update() {
 function updatePowerUpUI() {
   if (player.isBig) apMushroom.classList.add('active');
   else apMushroom.classList.remove('active');
-  
   if (player.starTimer > 0) apStar.classList.add('active');
   else apStar.classList.remove('active');
-  
   if (player.hasFire) apFire.classList.add('active');
   else apFire.classList.remove('active');
 }
 
 function hurtPlayer() {
   if (player.starTimer > 0) return;
-  
   if (player.isBig) {
     shrinkMario();
     player.hasFire = false;
@@ -1169,11 +910,9 @@ function hurtPlayer() {
     vibrate('error');
     return;
   }
-  
   lives--;
   vibrate('error');
   playHurtSound();
-  
   if (lives <= 0) {
     gameOver = true;
     stopMusic();
@@ -1243,7 +982,6 @@ pauseBtn.addEventListener('click', () => {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
   ctx.fillStyle = '#fff';
   const cloudOffset = cameraX * 0.3;
   for (let i = 0; i < 8; i++) {
@@ -1255,7 +993,6 @@ function draw() {
     ctx.arc(adjustedX + 50, 60 + (i%2)*30, 20, 0, Math.PI*2);
     ctx.fill();
   }
-  
   decorations.forEach(drawDecoration);
   platforms.forEach(drawPlatform);
   questionBlocks.forEach(drawQuestionBlock);
@@ -1279,4 +1016,117 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight') keys.right = true;
   if (e.key === 'ArrowUp' || e.key === ' ') keys.jump = true;
   if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') keys.fire = true;
-  if (e.key === 'p' || e.key === 'P' || e.key === 'з' ||
+  if (e.key === 'p' || e.key === 'P' || e.key === 'з' || e.key === 'З') pauseBtn.click();
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft') keys.left = false;
+  if (e.key === 'ArrowRight') keys.right = false;
+  if (e.key === 'ArrowUp' || e.key === ' ') keys.jump = false;
+  if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') keys.fire = false;
+});
+
+// ========== МУЛЬТИ-ТАЧ ==========
+const activeTouches = new Map();
+
+function getButtonAtPoint(x, y) {
+  const buttons = ['left', 'jump', 'right', 'fire'];
+  for (const id of buttons) {
+    const el = document.getElementById(id);
+    if (!el || el.style.display === 'none') continue;
+    const rect = el.getBoundingClientRect();
+    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+      return id;
+    }
+  }
+  return null;
+}
+
+function setKey(buttonId, value) {
+  if (buttonId === 'left') keys.left = value;
+  else if (buttonId === 'right') keys.right = value;
+  else if (buttonId === 'jump') keys.jump = value;
+  else if (buttonId === 'fire') keys.fire = value;
+  const el = document.getElementById(buttonId);
+  if (!el) return;
+  if (value) el.classList.add('active');
+  else el.classList.remove('active');
+}
+
+document.addEventListener('touchstart', (e) => {
+  activateAudioOnInteraction();
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const touch = e.changedTouches[i];
+    const btn = getButtonAtPoint(touch.clientX, touch.clientY);
+    if (btn) {
+      activeTouches.set(touch.identifier, btn);
+      setKey(btn, true);
+    }
+  }
+}, {passive: true});
+
+document.addEventListener('touchmove', (e) => {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const touch = e.changedTouches[i];
+    const oldBtn = activeTouches.get(touch.identifier);
+    const newBtn = getButtonAtPoint(touch.clientX, touch.clientY);
+    if (oldBtn !== newBtn) {
+      if (oldBtn) setKey(oldBtn, false);
+      if (newBtn) {
+        activeTouches.set(touch.identifier, newBtn);
+        setKey(newBtn, true);
+      } else {
+        activeTouches.delete(touch.identifier);
+      }
+    }
+  }
+}, {passive: true});
+
+document.addEventListener('touchend', (e) => {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const touch = e.changedTouches[i];
+    const btn = activeTouches.get(touch.identifier);
+    if (btn) {
+      setKey(btn, false);
+      activeTouches.delete(touch.identifier);
+    }
+  }
+}, {passive: true});
+
+document.addEventListener('touchcancel', (e) => {
+  for (let i = 0; i < e.changedTouches.length; i++) {
+    const touch = e.changedTouches[i];
+    const btn = activeTouches.get(touch.identifier);
+    if (btn) {
+      setKey(btn, false);
+      activeTouches.delete(touch.identifier);
+    }
+  }
+}, {passive: true});
+
+function bindMouseBtn(id, key) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('mousedown', () => {
+    activateAudioOnInteraction();
+    keys[key] = true;
+    el.classList.add('active');
+  });
+  el.addEventListener('mouseup', () => {
+    keys[key] = false;
+    el.classList.remove('active');
+  });
+  el.addEventListener('mouseleave', () => {
+    keys[key] = false;
+    el.classList.remove('active');
+  });
+}
+
+bindMouseBtn('left', 'left');
+bindMouseBtn('right', 'right');
+bindMouseBtn('jump', 'jump');
+bindMouseBtn('fire', 'fire');
+
+loop();
+</script>
+</body>
+</html>
