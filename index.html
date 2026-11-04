@@ -2,27 +2,153 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Mario Telegram</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  body { margin:0; background:#5c94fc; display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; overflow:hidden; }
-  canvas { background:#5c94fc; border:4px solid #000; max-width:100%; touch-action:none; }
-  #controls { position:absolute; bottom:20px; width:100%; display:flex; justify-content:space-between; padding:0 20px; box-sizing:border-box; }
-  .btn { width:70px; height:70px; background:rgba(0,0,0,0.4); color:#fff; border-radius:50%; font-size:30px; border:none; user-select:none; }
-  #overlay { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:none; justify-content:center; align-items:center; flex-direction:column; color:#fff; text-align:center; }
-  #overlay h1 { font-size:48px; margin:10px; text-shadow:3px 3px 0 #000; }
-  #overlay p { font-size:24px; margin:10px; }
-  #restartBtn { padding:15px 40px; font-size:24px; background:#e52521; color:#fff; border:none; border-radius:10px; cursor:pointer; margin-top:20px; }
+  * { user-select: none; -webkit-tap-highlight-color: transparent; }
+  body { 
+    margin:0; 
+    background:#5c94fc; 
+    display:flex; 
+    justify-content:center; 
+    align-items:center; 
+    height:100vh; 
+    font-family:sans-serif; 
+    overflow:hidden;
+    touch-action:none;
+  }
+  canvas { 
+    background:#5c94fc; 
+    border:4px solid #000; 
+    max-width:100%; 
+    touch-action:none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  }
+  
+  /* Панель управления */
+  #controls { 
+    position:absolute; 
+    bottom:20px; 
+    width:100%; 
+    display:flex; 
+    justify-content:space-between; 
+    align-items:flex-end;
+    padding:0 15px; 
+    box-sizing:border-box;
+    pointer-events:none;
+  }
+  
+  .btn { 
+    width:80px; 
+    height:80px; 
+    background:rgba(255,255,255,0.25); 
+    color:#fff; 
+    border:3px solid rgba(255,255,255,0.6);
+    border-radius:50%; 
+    font-size:36px; 
+    user-select:none;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    pointer-events:auto;
+    transition: all 0.1s;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    backdrop-filter: blur(5px);
+  }
+  
+  .btn.active {
+    background:rgba(229, 37, 33, 0.8);
+    border-color:#fff;
+    transform: scale(0.92);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  }
+  
+  .btn-jump {
+    width:90px;
+    height:90px;
+    background:rgba(229, 37, 33, 0.5);
+    border-color:rgba(255,255,255,0.8);
+    font-size:40px;
+  }
+  
+  .btn-jump.active {
+    background:rgba(229, 37, 33, 1);
+  }
+  
+  /* Кнопка паузы */
+  #pauseBtn {
+    position:absolute;
+    top:80px;
+    right:15px;
+    width:50px;
+    height:50px;
+    background:rgba(0,0,0,0.4);
+    color:#fff;
+    border:2px solid rgba(255,255,255,0.6);
+    border-radius:50%;
+    font-size:20px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    backdrop-filter: blur(5px);
+  }
+  
+  #pauseBtn.active {
+    background:rgba(229, 37, 33, 0.8);
+  }
+  
+  /* Оверлей (Game Over / Победа / Пауза) */
+  #overlay { 
+    position:absolute; 
+    top:0; left:0; 
+    width:100%; height:100%; 
+    background:rgba(0,0,0,0.75); 
+    display:none; 
+    justify-content:center; 
+    align-items:center; 
+    flex-direction:column; 
+    color:#fff; 
+    text-align:center;
+    z-index:100;
+  }
+  #overlay h1 { 
+    font-size:48px; 
+    margin:10px; 
+    text-shadow:3px 3px 0 #000; 
+  }
+  #overlay p { 
+    font-size:24px; 
+    margin:10px; 
+  }
+  #restartBtn { 
+    padding:15px 40px; 
+    font-size:24px; 
+    background:#e52521; 
+    color:#fff; 
+    border:none; 
+    border-radius:10px; 
+    cursor:pointer; 
+    margin-top:20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+  #restartBtn:active {
+    transform: scale(0.95);
+  }
 </style>
 </head>
 <body>
 <canvas id="game" width="400" height="500"></canvas>
+
+<div id="pauseBtn">⏸</div>
+
 <div id="controls">
   <button class="btn" id="left">◀</button>
-  <button class="btn" id="jump">▲</button>
+  <button class="btn btn-jump" id="jump">▲</button>
   <button class="btn" id="right">▶</button>
 </div>
+
 <div id="overlay">
   <h1 id="overlayTitle">Game Over</h1>
   <p id="overlayText">Очки: 0</p>
@@ -36,6 +162,7 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlayTitle');
 const overlayText = document.getElementById('overlayText');
 const restartBtn = document.getElementById('restartBtn');
+const pauseBtn = document.getElementById('pauseBtn');
 
 const keys = { left:false, right:false, jump:false };
 
@@ -45,9 +172,10 @@ let player = { x:50, y:300, w:30, h:40, vx:0, vy:0, onGround:false };
 // Состояние игры
 let score = 0;
 let lives = 3;
-let invincible = 0; // счётчик неуязвимости (в кадрах)
+let invincible = 0;
 let gameOver = false;
 let won = false;
+let paused = false;
 
 // Платформы
 const platforms = [
@@ -59,12 +187,9 @@ const platforms = [
   {x:150, y:130, w:80, h:15},
 ];
 
-// Монетки
 let coins = [];
-// Враги
 let enemies = [];
 
-// Начальная расстановка монеток и врагов
 function initLevel() {
   coins = [
     {x:130, y:350, taken:false},
@@ -80,9 +205,19 @@ function initLevel() {
 }
 initLevel();
 
-// Отрисовка Марио
+// Вибрация (работает только в Telegram на телефоне)
+function vibrate(style) {
+  if (window.Telegram && window.Telegram.WebApp) {
+    try {
+      if (style === 'light') window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+      else if (style === 'heavy') window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+      else if (style === 'success') window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      else if (style === 'error') window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    } catch(e) {}
+  }
+}
+
 function drawMario() {
-  // Если неуязвим — мигаем (пропускаем каждый второй кадр)
   if (invincible > 0 && Math.floor(invincible / 5) % 2 === 0) return;
 
   ctx.fillStyle = '#e52521';
@@ -95,13 +230,11 @@ function drawMario() {
   ctx.fillRect(player.x+8, player.y+20, 14, 3);
 }
 
-// Отрисовка сердечек
 function drawHearts() {
   for (let i = 0; i < 3; i++) {
     const x = 15 + i * 30;
     const y = 15;
     if (i < lives) {
-      // Полное сердечко
       ctx.fillStyle = '#e52521';
       ctx.beginPath();
       ctx.arc(x + 5, y + 5, 6, 0, Math.PI * 2);
@@ -111,7 +244,6 @@ function drawHearts() {
       ctx.lineTo(x + 20, y + 8);
       ctx.fill();
     } else {
-      // Пустое сердечко (контур)
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -123,7 +255,6 @@ function drawHearts() {
       ctx.stroke();
     }
   }
-  // Очки
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 20px sans-serif';
   ctx.fillText('Очки: ' + score, 15, 55);
@@ -156,9 +287,8 @@ function drawEnemy(e) {
 }
 
 function update() {
-  if (gameOver || won) return;
+  if (gameOver || won || paused) return;
 
-  // Движение
   if (keys.left) player.vx = -3;
   else if (keys.right) player.vx = 3;
   else player.vx = 0;
@@ -166,16 +296,15 @@ function update() {
   if (keys.jump && player.onGround) {
     player.vy = -10;
     player.onGround = false;
+    vibrate('light'); // Лёгкая вибрация при прыжке
   }
 
   player.vy += 0.5;
   player.x += player.vx;
   player.y += player.vy;
 
-  // Неуязвимость уменьшается
   if (invincible > 0) invincible--;
 
-  // Коллизии с платформами
   player.onGround = false;
   for (const p of platforms) {
     if (player.x < p.x + p.w && player.x + player.w > p.x &&
@@ -187,32 +316,29 @@ function update() {
     }
   }
 
-  // Границы
   if (player.x < 0) player.x = 0;
   if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
   
-  // Падение в пропасть = потеря жизни
   if (player.y > canvas.height) {
     hurtPlayer();
     return;
   }
 
-  // Монетки
   for (const c of coins) {
     if (!c.taken && Math.abs(player.x+15-c.x) < 20 && Math.abs(player.y+20-c.y) < 20) {
       c.taken = true;
       score += 10;
+      vibrate('success'); // Приятная вибрация при монетке
     }
   }
 
-  // Проверка победы
   if (coins.every(c => c.taken)) {
     won = true;
+    vibrate('success');
     showOverlay('🎉 Победа!', 'Ты собрал все монетки! Очки: ' + score);
     return;
   }
 
-  // Враги
   for (const e of enemies) {
     if (!e.alive) continue;
     e.x += e.vx;
@@ -221,12 +347,11 @@ function update() {
     if (player.x < e.x + e.w && player.x + player.w > e.x &&
         player.y < e.y + e.h && player.y + player.h > e.y) {
       if (player.vy > 0 && player.y + player.h < e.y + e.h/2 + 5) {
-        // Прыжок на врага
         e.alive = false;
         player.vy = -7;
         score += 50;
+        vibrate('success');
       } else if (invincible === 0) {
-        // Столкновение с врагом
         hurtPlayer();
         return;
       }
@@ -234,16 +359,14 @@ function update() {
   }
 }
 
-// Функция получения урона
 function hurtPlayer() {
   lives--;
+  vibrate('error'); // Сильная вибрация при ударе
   if (lives <= 0) {
     gameOver = true;
     showOverlay('💀 Game Over', 'Твой счёт: ' + score);
   } else {
-    // Неуязвимость на 2 секунды (120 кадров при 60 FPS)
     invincible = 120;
-    // Возврат на старт
     player.x = 50;
     player.y = 300;
     player.vx = 0;
@@ -251,29 +374,47 @@ function hurtPlayer() {
   }
 }
 
-// Показать экран Game Over / Победы
 function showOverlay(title, text) {
   overlayTitle.textContent = title;
   overlayText.textContent = text;
   overlay.style.display = 'flex';
 }
 
-// Перезапуск игры
 function restart() {
   score = 0;
   lives = 3;
   invincible = 0;
   gameOver = false;
   won = false;
+  paused = false;
+  pauseBtn.textContent = '⏸';
+  pauseBtn.classList.remove('active');
   player = { x:50, y:300, w:30, h:40, vx:0, vy:0, onGround:false };
   initLevel();
   overlay.style.display = 'none';
 }
 restartBtn.addEventListener('click', restart);
 
+// Пауза
+pauseBtn.addEventListener('click', () => {
+  if (gameOver || won) return;
+  paused = !paused;
+  if (paused) {
+    pauseBtn.textContent = '▶';
+    pauseBtn.classList.add('active');
+    showOverlay('⏸ Пауза', 'Нажми ▶ чтобы продолжить');
+    // Прячем кнопку "Играть снова" в режиме паузы
+    restartBtn.style.display = 'none';
+  } else {
+    pauseBtn.textContent = '⏸';
+    pauseBtn.classList.remove('active');
+    overlay.style.display = 'none';
+    restartBtn.style.display = 'block';
+  }
+});
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // Облака
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.arc(80, 60, 20, 0, Math.PI*2); ctx.arc(100, 60, 25, 0, Math.PI*2); ctx.arc(120, 60, 20, 0, Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(300, 90, 18, 0, Math.PI*2); ctx.arc(320, 90, 22, 0, Math.PI*2); ctx.fill();
@@ -291,11 +432,12 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// Управление
+// Клавиатура (для ПК)
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') keys.left = true;
   if (e.key === 'ArrowRight') keys.right = true;
   if (e.key === 'ArrowUp' || e.key === ' ') keys.jump = true;
+  if (e.key === 'p' || e.key === 'P' || e.key === 'з' || e.key === 'З') pauseBtn.click();
 });
 document.addEventListener('keyup', e => {
   if (e.key === 'ArrowLeft') keys.left = false;
@@ -303,16 +445,44 @@ document.addEventListener('keyup', e => {
   if (e.key === 'ArrowUp' || e.key === ' ') keys.jump = false;
 });
 
+// Улучшенное управление для кнопок (с визуальной обратной связью)
 function bindBtn(id, key) {
   const el = document.getElementById(id);
-  el.addEventListener('touchstart', e => { e.preventDefault(); keys[key] = true; });
-  el.addEventListener('touchend', e => { e.preventDefault(); keys[key] = false; });
-  el.addEventListener('mousedown', () => keys[key] = true);
-  el.addEventListener('mouseup', () => keys[key] = false);
+  
+  const activate = (e) => {
+    e.preventDefault();
+    keys[key] = true;
+    el.classList.add('active');
+  };
+  
+  const deactivate = (e) => {
+    e.preventDefault();
+    keys[key] = false;
+    el.classList.remove('active');
+  };
+  
+  // Для сенсорных экранов
+  el.addEventListener('touchstart', activate, {passive: false});
+  el.addEventListener('touchend', deactivate, {passive: false});
+  el.addEventListener('touchcancel', deactivate, {passive: false});
+  
+  // Для мыши
+  el.addEventListener('mousedown', activate);
+  el.addEventListener('mouseup', deactivate);
+  el.addEventListener('mouseleave', deactivate);
 }
+
 bindBtn('left', 'left');
 bindBtn('right', 'right');
 bindBtn('jump', 'jump');
+
+// ВАЖНО: если палец соскользнул за пределы экрана — отпустить все кнопки
+document.addEventListener('touchend', () => {
+  keys.left = false;
+  keys.right = false;
+  keys.jump = false;
+  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+});
 
 loop();
 </script>
