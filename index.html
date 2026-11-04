@@ -36,6 +36,7 @@
     padding:0 15px; 
     box-sizing:border-box;
     pointer-events:none;
+    z-index:50;
   }
   
   .btn { 
@@ -60,7 +61,6 @@
     background:rgba(229, 37, 33, 0.8);
     border-color:#fff;
     transform: scale(0.92);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
   }
   
   .btn-jump {
@@ -162,7 +162,12 @@ const overlayText = document.getElementById('overlayText');
 const restartBtn = document.getElementById('restartBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 
+// РАЗМЕРЫ МИРА
+const WORLD_WIDTH = 2400;
+const WORLD_HEIGHT = 500;
+
 const keys = { left:false, right:false, jump:false };
+let cameraX = 0; // Смещение камеры
 
 let player = { x:50, y:300, w:30, h:40, vx:0, vy:0, onGround:false };
 
@@ -173,29 +178,99 @@ let gameOver = false;
 let won = false;
 let paused = false;
 
+// БОЛЬШОЙ УРОВЕНЬ — платформы
 const platforms = [
-  {x:0, y:460, w:400, h:40},
-  {x:100, y:380, w:80, h:15},
-  {x:220, y:320, w:80, h:15},
-  {x:50, y:250, w:80, h:15},
-  {x:250, y:200, w:100, h:15},
-  {x:150, y:130, w:80, h:15},
+  // Стартовая зона (0-400)
+  {x:0, y:460, w:450, h:40},
+  {x:150, y:380, w:80, h:15},
+  {x:280, y:320, w:80, h:15},
+  
+  // Зона 2 (450-850)
+  {x:500, y:460, w:150, h:40},
+  {x:550, y:360, w:80, h:15},
+  {x:700, y:300, w:100, h:15},
+  {x:820, y:380, w:80, h:15},
+  
+  // Зона 3 — высокие прыжки (850-1250)
+  {x:950, y:460, w:100, h:40},
+  {x:1050, y:400, w:60, h:15},
+  {x:1150, y:340, w:60, h:15},
+  {x:1080, y:260, w:80, h:15},
+  {x:1200, y:200, w:80, h:15},
+  
+  // Зона 4 — опасная (1250-1650)
+  {x:1320, y:460, w:80, h:40},
+  {x:1450, y:400, w:60, h:15},
+  {x:1550, y:340, w:60, h:15},
+  {x:1450, y:260, w:80, h:15},
+  {x:1600, y:200, w:100, h:15},
+  
+  // Зона 5 — финальный рывок (1650-2050)
+  {x:1750, y:460, w:120, h:40},
+  {x:1900, y:380, w:80, h:15},
+  {x:2020, y:320, w:80, h:15},
+  {x:1900, y:240, w:80, h:15},
+  
+  // Зона 6 — финиш (2050-2400)
+  {x:2150, y:460, w:250, h:40},
+  {x:2200, y:380, w:80, h:15},
+  {x:2320, y:320, w:80, h:15},
 ];
 
+// МНОГО МОНЕТ (25 штук!)
 let coins = [];
+// ВРАГИ (8 штук!)
 let enemies = [];
+
+// Флаг финиша
+const flag = { x: 2350, y: 380, w: 10, h: 80 };
 
 function initLevel() {
   coins = [
-    {x:130, y:350, taken:false},
-    {x:250, y:290, taken:false},
-    {x:80, y:220, taken:false},
-    {x:290, y:170, taken:false},
-    {x:180, y:100, taken:false},
+    // Зона 1
+    {x:180, y:350, taken:false},
+    {x:310, y:290, taken:false},
+    {x:380, y:430, taken:false},
+    // Зона 2
+    {x:580, y:330, taken:false},
+    {x:740, y:270, taken:false},
+    {x:850, y:350, taken:false},
+    {x:620, y:430, taken:false},
+    // Зона 3
+    {x:1080, y:370, taken:false},
+    {x:1180, y:310, taken:false},
+    {x:1110, y:230, taken:false},
+    {x:1230, y:170, taken:false},
+    // Зона 4
+    {x:1480, y:370, taken:false},
+    {x:1580, y:310, taken:false},
+    {x:1480, y:230, taken:false},
+    {x:1640, y:170, taken:false},
+    {x:1360, y:430, taken:false},
+    // Зона 5
+    {x:1940, y:350, taken:false},
+    {x:2050, y:290, taken:false},
+    {x:1940, y:210, taken:false},
+    {x:1800, y:430, taken:false},
+    // Зона 6
+    {x:2230, y:350, taken:false},
+    {x:2350, y:290, taken:false},
+    {x:2200, y:430, taken:false},
+    {x:2280, y:430, taken:false},
+    {x:2380, y:430, taken:false},
   ];
+  
   enemies = [
-    {x:50, y:440, w:25, h:20, vx:1, minX:0, maxX:375, alive:true},
-    {x:230, y:300, w:25, h:20, vx:-1, minX:220, maxX:295, alive:true},
+    // Наземные враги (ходят по платформам)
+    {x:200, y:440, w:25, h:20, vx:1, minX:50, maxX:400, alive:true, type:'goomba'},
+    {x:550, y:440, w:25, h:20, vx:-1, minX:500, maxX:625, alive:true, type:'goomba'},
+    {x:970, y:440, w:25, h:20, vx:1, minX:950, maxX:1025, alive:true, type:'goomba'},
+    {x:1340, y:440, w:25, h:20, vx:-1, minX:1320, maxX:1375, alive:true, type:'goomba'},
+    {x:1780, y:440, w:25, h:20, vx:1, minX:1750, maxX:1845, alive:true, type:'goomba'},
+    {x:2200, y:440, w:25, h:20, vx:-1, minX:2150, maxX:2375, alive:true, type:'goomba'},
+    // Летающие враги (летают вверх-вниз)
+    {x:750, y:200, w:25, h:20, vy:1, minY:150, maxY:280, alive:true, type:'flying'},
+    {x:1500, y:150, w:25, h:20, vy:-1, minY:100, maxY:230, alive:true, type:'flying'},
   ];
 }
 initLevel();
@@ -213,18 +288,21 @@ function vibrate(style) {
 
 function drawMario() {
   if (invincible > 0 && Math.floor(invincible / 5) % 2 === 0) return;
-
+  const x = player.x - cameraX;
+  const y = player.y;
+  
   ctx.fillStyle = '#e52521';
-  ctx.fillRect(player.x, player.y, player.w, 12);
+  ctx.fillRect(x, y, player.w, 12);
   ctx.fillStyle = '#fcb89c';
-  ctx.fillRect(player.x+5, player.y+12, 20, 12);
+  ctx.fillRect(x+5, y+12, 20, 12);
   ctx.fillStyle = '#1f5fd6';
-  ctx.fillRect(player.x+3, player.y+24, 24, 16);
+  ctx.fillRect(x+3, y+24, 24, 16);
   ctx.fillStyle = '#000';
-  ctx.fillRect(player.x+8, player.y+20, 14, 3);
+  ctx.fillRect(x+8, y+20, 14, 3);
 }
 
 function drawHearts() {
+  // Рисуем поверх всего, не зависит от камеры
   for (let i = 0; i < 3; i++) {
     const x = 15 + i * 30;
     const y = 15;
@@ -255,29 +333,126 @@ function drawHearts() {
 }
 
 function drawPlatform(p) {
+  const x = p.x - cameraX;
+  // Не рисуем то, что за экраном
+  if (x + p.w < 0 || x > canvas.width) return;
+  
   ctx.fillStyle = '#c84c0c';
-  ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.fillRect(x, p.y, p.w, p.h);
   ctx.fillStyle = '#fca044';
-  ctx.fillRect(p.x, p.y, p.w, 4);
+  ctx.fillRect(x, p.y, p.w, 4);
 }
 
 function drawCoin(c) {
   if (c.taken) return;
+  const x = c.x - cameraX;
+  if (x < -20 || x > canvas.width + 20) return;
+  
   ctx.fillStyle = '#ffd700';
   ctx.beginPath();
-  ctx.arc(c.x, c.y, 8, 0, Math.PI*2);
+  ctx.arc(x, c.y, 8, 0, Math.PI*2);
   ctx.fill();
   ctx.fillStyle = '#b8860b';
-  ctx.fillRect(c.x-1, c.y-5, 2, 10);
+  ctx.fillRect(x-1, c.y-5, 2, 10);
 }
 
 function drawEnemy(e) {
   if (!e.alive) return;
-  ctx.fillStyle = '#6b3410';
-  ctx.fillRect(e.x, e.y, e.w, e.h);
-  ctx.fillStyle = '#000';
-  ctx.fillRect(e.x+5, e.y+5, 4, 4);
-  ctx.fillRect(e.x+16, e.y+5, 4, 4);
+  const x = e.x - cameraX;
+  if (x + e.w < 0 || x > canvas.width) return;
+  
+  if (e.type === 'goomba') {
+    ctx.fillStyle = '#6b3410';
+    ctx.fillRect(x, e.y, e.w, e.h);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x+5, e.y+5, 4, 4);
+    ctx.fillRect(x+16, e.y+5, 4, 4);
+    // Ножки
+    ctx.fillStyle = '#000';
+    ctx.fillRect(x+3, e.y+e.h-3, 6, 3);
+    ctx.fillRect(x+16, e.y+e.h-3, 6, 3);
+  } else if (e.type === 'flying') {
+    // Летающий враг — фиолетовый с крыльями
+    ctx.fillStyle = '#8b3fc7';
+    ctx.fillRect(x, e.y, e.w, e.h);
+    // Крылья
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(x-5, e.y+10);
+    ctx.lineTo(x-12, e.y+5);
+    ctx.lineTo(x-5, e.y+15);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x+e.w+5, e.y+10);
+    ctx.lineTo(x+e.w+12, e.y+5);
+    ctx.lineTo(x+e.w+5, e.y+15);
+    ctx.fill();
+    // Глаза
+    ctx.fillStyle = '#ff0';
+    ctx.fillRect(x+5, e.y+5, 4, 4);
+    ctx.fillRect(x+16, e.y+5, 4, 4);
+  }
+}
+
+function drawFlag() {
+  const x = flag.x - cameraX;
+  if (x < -50 || x > canvas.width + 50) return;
+  
+  // Шест
+  ctx.fillStyle = '#888';
+  ctx.fillRect(x, flag.y, flag.w, flag.h);
+  // Флажок
+  ctx.fillStyle = '#00ff00';
+  ctx.beginPath();
+  ctx.moveTo(x + flag.w, flag.y);
+  ctx.lineTo(x + flag.w + 30, flag.y + 10);
+  ctx.lineTo(x + flag.w, flag.y + 20);
+  ctx.fill();
+  // Шарик наверху
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.arc(x + flag.w/2, flag.y, 6, 0, Math.PI*2);
+  ctx.fill();
+}
+
+// Фоновые декорации (горы, кусты) — для красоты
+const decorations = [
+  {type:'mountain', x:100, y:380, w:150, h:80},
+  {type:'mountain', x:600, y:380, w:180, h:80},
+  {type:'mountain', x:1200, y:380, w:150, h:80},
+  {type:'mountain', x:1800, y:380, w:200, h:80},
+  {type:'bush', x:300, y:440, w:60, h:20},
+  {type:'bush', x:900, y:440, w:80, h:20},
+  {type:'bush', x:1500, y:440, w:60, h:20},
+  {type:'bush', x:2100, y:440, w:70, h:20},
+];
+
+function drawDecoration(d) {
+  const x = d.x - cameraX;
+  if (x + d.w < 0 || x > canvas.width) return;
+  
+  if (d.type === 'mountain') {
+    ctx.fillStyle = '#3a8a3a';
+    ctx.beginPath();
+    ctx.moveTo(x, d.y + d.h);
+    ctx.lineTo(x + d.w/2, d.y);
+    ctx.lineTo(x + d.w, d.y + d.h);
+    ctx.fill();
+    // Снежная шапка
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(x + d.w/2 - 15, d.y + 20);
+    ctx.lineTo(x + d.w/2, d.y);
+    ctx.lineTo(x + d.w/2 + 15, d.y + 20);
+    ctx.fill();
+  } else if (d.type === 'bush') {
+    ctx.fillStyle = '#2d7a2d';
+    ctx.beginPath();
+    ctx.arc(x + 15, d.y + 10, 15, 0, Math.PI*2);
+    ctx.arc(x + 35, d.y + 10, 18, 0, Math.PI*2);
+    ctx.arc(x + 55, d.y + 10, 15, 0, Math.PI*2);
+    ctx.fill();
+  }
 }
 
 function update() {
@@ -297,6 +472,15 @@ function update() {
   player.x += player.vx;
   player.y += player.vy;
 
+  // Границы мира (не экрана!)
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.w > WORLD_WIDTH) player.x = WORLD_WIDTH - player.w;
+
+  // КАМЕРА следует за игроком
+  cameraX = player.x - canvas.width / 2 + player.w / 2;
+  if (cameraX < 0) cameraX = 0;
+  if (cameraX > WORLD_WIDTH - canvas.width) cameraX = WORLD_WIDTH - canvas.width;
+
   if (invincible > 0) invincible--;
 
   player.onGround = false;
@@ -310,14 +494,13 @@ function update() {
     }
   }
 
-  if (player.x < 0) player.x = 0;
-  if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
-  
-  if (player.y > canvas.height) {
+  // Падение в пропасть
+  if (player.y > WORLD_HEIGHT) {
     hurtPlayer();
     return;
   }
 
+  // Монетки
   for (const c of coins) {
     if (!c.taken && Math.abs(player.x+15-c.x) < 20 && Math.abs(player.y+20-c.y) < 20) {
       c.taken = true;
@@ -326,17 +509,17 @@ function update() {
     }
   }
 
-  if (coins.every(c => c.taken)) {
-    won = true;
-    vibrate('success');
-    showOverlay('🎉 Победа!', 'Ты собрал все монетки! Очки: ' + score);
-    return;
-  }
-
+  // Враги
   for (const e of enemies) {
     if (!e.alive) continue;
-    e.x += e.vx;
-    if (e.x < e.minX || e.x + e.w > e.maxX) e.vx *= -1;
+    
+    if (e.type === 'goomba') {
+      e.x += e.vx;
+      if (e.x < e.minX || e.x + e.w > e.maxX) e.vx *= -1;
+    } else if (e.type === 'flying') {
+      e.y += e.vy;
+      if (e.y < e.minY || e.y > e.maxY) e.vy *= -1;
+    }
 
     if (player.x < e.x + e.w && player.x + player.w > e.x &&
         player.y < e.y + e.h && player.y + player.h > e.y) {
@@ -351,6 +534,15 @@ function update() {
       }
     }
   }
+
+  // ФИНИШНЫЙ ФЛАГ
+  if (player.x + player.w > flag.x && player.x < flag.x + flag.w + 30 &&
+      player.y + player.h > flag.y && player.y < flag.y + flag.h) {
+    won = true;
+    score += 200; // Бонус за финиш
+    vibrate('success');
+    showOverlay('🏆 ПОБЕДА!', 'Ты дошёл до финиша! Очки: ' + score);
+  }
 }
 
 function hurtPlayer() {
@@ -361,10 +553,12 @@ function hurtPlayer() {
     showOverlay('💀 Game Over', 'Твой счёт: ' + score);
   } else {
     invincible = 120;
+    // Возврат на старт уровня
     player.x = 50;
     player.y = 300;
     player.vx = 0;
     player.vy = 0;
+    cameraX = 0;
   }
 }
 
@@ -382,6 +576,7 @@ function restart() {
   gameOver = false;
   won = false;
   paused = false;
+  cameraX = 0;
   pauseBtn.textContent = '⏸';
   pauseBtn.classList.remove('active');
   player = { x:50, y:300, w:30, h:40, vx:0, vy:0, onGround:false };
@@ -406,14 +601,31 @@ pauseBtn.addEventListener('click', () => {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Фон (облака — двигаются с параллаксом)
   ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(80, 60, 20, 0, Math.PI*2); ctx.arc(100, 60, 25, 0, Math.PI*2); ctx.arc(120, 60, 20, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(300, 90, 18, 0, Math.PI*2); ctx.arc(320, 90, 22, 0, Math.PI*2); ctx.fill();
-
+  const cloudOffset = cameraX * 0.3;
+  for (let i = 0; i < 8; i++) {
+    const cx = (i * 350 - cloudOffset) % (WORLD_WIDTH + 200);
+    const adjustedX = cx < -100 ? cx + WORLD_WIDTH + 200 : cx;
+    ctx.beginPath();
+    ctx.arc(adjustedX, 60 + (i%2)*30, 20, 0, Math.PI*2);
+    ctx.arc(adjustedX + 25, 60 + (i%2)*30, 25, 0, Math.PI*2);
+    ctx.arc(adjustedX + 50, 60 + (i%2)*30, 20, 0, Math.PI*2);
+    ctx.fill();
+  }
+  
+  // Декорации
+  decorations.forEach(drawDecoration);
+  
+  // Игровые объекты
   platforms.forEach(drawPlatform);
   coins.forEach(drawCoin);
   enemies.forEach(drawEnemy);
+  drawFlag();
   drawMario();
+  
+  // UI поверх всего
   drawHearts();
 }
 
@@ -435,7 +647,6 @@ document.addEventListener('keyup', e => {
   if (e.key === 'ArrowUp' || e.key === ' ') keys.jump = false;
 });
 
-// УЛУЧШЕННОЕ УПРАВЛЕНИЕ ДЛЯ ТЕЛЕФОНА
 function bindBtn(id, key) {
   const el = document.getElementById(id);
   
@@ -451,7 +662,6 @@ function bindBtn(id, key) {
     el.classList.remove('active');
   };
   
-  // Проверяем, находится ли точка внутри элемента
   const isInside = (touch) => {
     const rect = el.getBoundingClientRect();
     return touch.clientX >= rect.left && touch.clientX <= rect.right &&
@@ -462,16 +672,13 @@ function bindBtn(id, key) {
   el.addEventListener('touchend', deactivate, {passive: false});
   el.addEventListener('touchcancel', deactivate, {passive: false});
   
-  // ВАЖНО: при движении пальца проверяем, на какой кнопке он находится
   el.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const touch = e.touches[0];
     if (!isInside(touch)) {
-      // Палец ушёл за пределы кнопки — отпускаем
       keys[key] = false;
       el.classList.remove('active');
     } else {
-      // Палец вернулся — нажимаем снова
       keys[key] = true;
       el.classList.add('active');
     }
@@ -486,7 +693,6 @@ bindBtn('left', 'left');
 bindBtn('right', 'right');
 bindBtn('jump', 'jump');
 
-// Глобальный обработчик: если все пальцы убраны — сбрасываем все кнопки
 document.addEventListener('touchend', (e) => {
   if (e.touches.length === 0) {
     keys.left = false;
