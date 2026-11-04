@@ -26,7 +26,6 @@
     box-shadow: 0 0 20px rgba(0,0,0,0.3);
   }
   
-  /* Панель управления */
   #controls { 
     position:absolute; 
     bottom:20px; 
@@ -76,7 +75,6 @@
     background:rgba(229, 37, 33, 1);
   }
   
-  /* Кнопка паузы */
   #pauseBtn {
     position:absolute;
     top:80px;
@@ -93,13 +91,13 @@
     align-items:center;
     cursor:pointer;
     backdrop-filter: blur(5px);
+    z-index:200;
   }
   
   #pauseBtn.active {
     background:rgba(229, 37, 33, 0.8);
   }
   
-  /* Оверлей (Game Over / Победа / Пауза) */
   #overlay { 
     position:absolute; 
     top:0; left:0; 
@@ -166,10 +164,8 @@ const pauseBtn = document.getElementById('pauseBtn');
 
 const keys = { left:false, right:false, jump:false };
 
-// Игрок
 let player = { x:50, y:300, w:30, h:40, vx:0, vy:0, onGround:false };
 
-// Состояние игры
 let score = 0;
 let lives = 3;
 let invincible = 0;
@@ -177,7 +173,6 @@ let gameOver = false;
 let won = false;
 let paused = false;
 
-// Платформы
 const platforms = [
   {x:0, y:460, w:400, h:40},
   {x:100, y:380, w:80, h:15},
@@ -205,7 +200,6 @@ function initLevel() {
 }
 initLevel();
 
-// Вибрация (работает только в Telegram на телефоне)
 function vibrate(style) {
   if (window.Telegram && window.Telegram.WebApp) {
     try {
@@ -296,7 +290,7 @@ function update() {
   if (keys.jump && player.onGround) {
     player.vy = -10;
     player.onGround = false;
-    vibrate('light'); // Лёгкая вибрация при прыжке
+    vibrate('light');
   }
 
   player.vy += 0.5;
@@ -328,7 +322,7 @@ function update() {
     if (!c.taken && Math.abs(player.x+15-c.x) < 20 && Math.abs(player.y+20-c.y) < 20) {
       c.taken = true;
       score += 10;
-      vibrate('success'); // Приятная вибрация при монетке
+      vibrate('success');
     }
   }
 
@@ -361,7 +355,7 @@ function update() {
 
 function hurtPlayer() {
   lives--;
-  vibrate('error'); // Сильная вибрация при ударе
+  vibrate('error');
   if (lives <= 0) {
     gameOver = true;
     showOverlay('💀 Game Over', 'Твой счёт: ' + score);
@@ -374,9 +368,10 @@ function hurtPlayer() {
   }
 }
 
-function showOverlay(title, text) {
+function showOverlay(title, text, showRestart = true) {
   overlayTitle.textContent = title;
   overlayText.textContent = text;
+  restartBtn.style.display = showRestart ? 'block' : 'none';
   overlay.style.display = 'flex';
 }
 
@@ -395,21 +390,17 @@ function restart() {
 }
 restartBtn.addEventListener('click', restart);
 
-// Пауза
 pauseBtn.addEventListener('click', () => {
   if (gameOver || won) return;
   paused = !paused;
   if (paused) {
     pauseBtn.textContent = '▶';
     pauseBtn.classList.add('active');
-    showOverlay('⏸ Пауза', 'Нажми ▶ чтобы продолжить');
-    // Прячем кнопку "Играть снова" в режиме паузы
-    restartBtn.style.display = 'none';
+    showOverlay('⏸ Пауза', 'Нажми ▶ чтобы продолжить', false);
   } else {
     pauseBtn.textContent = '⏸';
     pauseBtn.classList.remove('active');
     overlay.style.display = 'none';
-    restartBtn.style.display = 'block';
   }
 });
 
@@ -432,7 +423,6 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// Клавиатура (для ПК)
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') keys.left = true;
   if (e.key === 'ArrowRight') keys.right = true;
@@ -445,7 +435,7 @@ document.addEventListener('keyup', e => {
   if (e.key === 'ArrowUp' || e.key === ' ') keys.jump = false;
 });
 
-// Улучшенное управление для кнопок (с визуальной обратной связью)
+// УЛУЧШЕННОЕ УПРАВЛЕНИЕ ДЛЯ ТЕЛЕФОНА
 function bindBtn(id, key) {
   const el = document.getElementById(id);
   
@@ -461,12 +451,32 @@ function bindBtn(id, key) {
     el.classList.remove('active');
   };
   
-  // Для сенсорных экранов
+  // Проверяем, находится ли точка внутри элемента
+  const isInside = (touch) => {
+    const rect = el.getBoundingClientRect();
+    return touch.clientX >= rect.left && touch.clientX <= rect.right &&
+           touch.clientY >= rect.top && touch.clientY <= rect.bottom;
+  };
+  
   el.addEventListener('touchstart', activate, {passive: false});
   el.addEventListener('touchend', deactivate, {passive: false});
   el.addEventListener('touchcancel', deactivate, {passive: false});
   
-  // Для мыши
+  // ВАЖНО: при движении пальца проверяем, на какой кнопке он находится
+  el.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (!isInside(touch)) {
+      // Палец ушёл за пределы кнопки — отпускаем
+      keys[key] = false;
+      el.classList.remove('active');
+    } else {
+      // Палец вернулся — нажимаем снова
+      keys[key] = true;
+      el.classList.add('active');
+    }
+  }, {passive: false});
+  
   el.addEventListener('mousedown', activate);
   el.addEventListener('mouseup', deactivate);
   el.addEventListener('mouseleave', deactivate);
@@ -476,12 +486,14 @@ bindBtn('left', 'left');
 bindBtn('right', 'right');
 bindBtn('jump', 'jump');
 
-// ВАЖНО: если палец соскользнул за пределы экрана — отпустить все кнопки
-document.addEventListener('touchend', () => {
-  keys.left = false;
-  keys.right = false;
-  keys.jump = false;
-  document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+// Глобальный обработчик: если все пальцы убраны — сбрасываем все кнопки
+document.addEventListener('touchend', (e) => {
+  if (e.touches.length === 0) {
+    keys.left = false;
+    keys.right = false;
+    keys.jump = false;
+    document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+  }
 });
 
 loop();
